@@ -820,6 +820,8 @@ namespace BreakInfinity
                         return FormatGeneral(value, formatDigits);
                     case 'E':
                         return FormatExponential(value, formatDigits);
+                    case 'N':
+                        return FormatEngineering(value, formatDigits);
                     case 'F':
                         return FormatFixed(value, formatDigits);
                 }
@@ -906,6 +908,108 @@ namespace BreakInfinity
                 }
                 return mantissa + "E" + (value.Exponent >= 0 ? "+" : "")
                        + value.Exponent;
+            }
+            private static string FormatEngineering(BigDouble value, int places)
+            {
+                if (value.Exponent <= -ExpLimit || IsZero(value.Mantissa))
+                {
+                    return "0" + (places > 0 ? ".".PadRight(places + 1, '0') : "") + "E+0";
+                }
+
+                if (value.Exponent % 3 == 0)
+                {
+                    var len = (places >= 0 ? places : MaxSignificantDigits) + 1;
+                    var numDigits = (int)Math.Ceiling(Math.Log10(Math.Abs(value.Mantissa)));
+                    var rounded = Math.Round(value.Mantissa * Math.Pow(10, len - numDigits)) * Math.Pow(10, numDigits - len);
+
+                    var mantissa = ToFixed(rounded, Math.Max(len - numDigits, 0));
+                    if (mantissa != "0" && places < 0)
+                    {
+                        mantissa = mantissa.TrimEnd('0', '.');
+                    }
+
+                    return mantissa + "E" + (value.Exponent >= 0 ? "+" : "")
+                                           + value.Exponent;
+                }
+                else if (value.Exponent % 3 == 1)
+                {
+                    var len = (places >= 0 ? places : MaxSignificantDigits) + 2;
+                    var numDigits = (int)Math.Ceiling(Math.Log10(Math.Abs(value.Mantissa)));
+                    var rounded = Math.Round(value.Mantissa * Math.Pow(10, len - numDigits)) * Math.Pow(10, numDigits - len);
+
+                    rounded *= 10;
+
+                    var mantissa = ToFixed(rounded, Math.Max(len - numDigits - 1, 0));
+                    if (mantissa != "0" && places < 0)
+                    {
+                        mantissa = mantissa.TrimEnd('0', '.');
+                    }
+
+                    return mantissa + "E" + (value.Exponent >= 1 ? "+" : "")
+                       + (value.Exponent - 1);
+                }
+                else
+                {
+                    var len = (places >= 0 ? places : MaxSignificantDigits) + 3;
+                    var numDigits = (int)Math.Ceiling(Math.Log10(Math.Abs(value.Mantissa)));
+                    var rounded = Math.Round(value.Mantissa * Math.Pow(10, len - numDigits)) * Math.Pow(10, numDigits - len);
+
+                    rounded *= 100;
+
+                    var mantissa = ToFixed(rounded, Math.Max(len - numDigits - 2, 0));
+                    if (mantissa != "0" && places < 0)
+                    {
+                        mantissa = mantissa.TrimEnd('0', '.');
+                    }
+
+                    return mantissa + "E" + (value.Exponent >= 2 ? "+" : "")
+                       + (value.Exponent - 2);
+                }
+            }
+            private static string FormatEngineering2(BigDouble value, int places)
+            {
+                if (value.Exponent <= -ExpLimit || IsZero(value.Mantissa))
+                {
+                    return "0" + (places > 0 ? ".".PadRight(places + 1, '0') : "") + "E+0";
+                }
+
+                var len = (places >= 0 ? places : MaxSignificantDigits) + 1;
+                var numDigits = (int)Math.Ceiling(Math.Log10(Math.Abs(value.Mantissa)));
+                var rounded = Math.Round(value.Mantissa * Math.Pow(10, len - numDigits)) * Math.Pow(10, numDigits - len);
+                
+                if (value.Exponent % 3 == 0)
+                {
+                        
+                }
+                else if (value.Exponent % 3 == 1)
+                {
+                    rounded *= 10;
+                }
+                else
+                {
+                    rounded *= 100;
+                }
+                var mantissa = ToFixed(rounded, Math.Max(len - numDigits, 0));
+                if (mantissa != "0" && places < 0)
+                {
+                    mantissa = mantissa.TrimEnd('0', '.');
+                }
+
+                if (value.Exponent % 3 == 0)
+                {
+                    return mantissa + "E" + (value.Exponent >= 0 ? "+" : "")
+                                           + value.Exponent;
+                }
+                else if (value.Exponent % 3 == 1)
+                {
+                    return mantissa + "E" + (value.Exponent >= 1 ? "+" : "")
+                       + (value.Exponent - 1);
+                }
+                else
+                {
+                    return mantissa + "E" + (value.Exponent >= 2 ? "+" : "")
+                       + (value.Exponent - 2);
+                }
             }
 
             private static string FormatFixed(BigDouble value, int places)
